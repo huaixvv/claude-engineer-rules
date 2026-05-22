@@ -113,12 +113,10 @@ If external services or third-party integrations are not yet available:
 Example:
 getOrderList(params) {
   ...(logic code)
-  
-  // TODO: Replace after payment service integration
-  
+  // TODO: Replace after order service integration
   return mockOrderData
-
 }
+
 ---
 
 10. Before making any modifications, you must analyze the full context, including:
