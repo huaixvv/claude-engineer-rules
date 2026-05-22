@@ -151,7 +151,7 @@ Avoid missing related code or introducing inconsistent behavior.
 
 12. Other Specifications
 
-- For new projects (or projects without an established convention in the relevant domain), the following specifications must be strictly followed: `backend/api_response_spec.md` and then establish it.
+- For new projects (or projects without an established convention in the relevant domain), the following specifications must be strictly followed: `@/Users/zhixuan/Desktop/PROJECTS/claude-engineer-rules/backend/api_response_spec.md` and then establish it.
 
 ---
 
