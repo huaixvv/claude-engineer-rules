@@ -148,7 +148,14 @@ Avoid missing related code or introducing inconsistent behavior.
 
 ---
 
-12. After implementation, you must verify:
+
+12. Other Specifications
+
+- For new projects (or projects without an established convention in the relevant domain), the following specifications must be strictly followed: `backend/api_response_spec.md` and then establish it.
+
+---
+
+13. After implementation, you must verify:
 - Whether the requirements are fully satisfied
 - Whether existing functionality is affected
 - Whether project conventions are followed
@@ -156,6 +163,8 @@ Avoid missing related code or introducing inconsistent behavior.
 - Whether duplicate logic exists
 - Whether permission risks exist
 - Whether status flow handling is correct
+
+---
 
 Finally, you must clearly explain (explain in Chinese, using tables or lists):
 1. What was modified
