@@ -111,10 +111,14 @@ If external services or third-party integrations are not yet available:
 - Prioritize keeping the main workflow functional
 
 Example:
+getOrderList(params) {
+  ...(logic code)
+  
+  // TODO: Replace after payment service integration
+  
+  return mockOrderData
 
-// TODO: Replace after payment service integration
-return mockData
-
+}
 ---
 
 10. Before making any modifications, you must analyze the full context, including:
