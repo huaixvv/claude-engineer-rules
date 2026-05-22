@@ -95,15 +95,32 @@ Never use display text for business logic decisions.
 Backend should return raw values only.
 
 Additionally, you must ensure field consistency across modules:
-Fields with the same meaning across different modules must use consistent naming conventions.
-Avoid semantic duplication or different variable names for the same concept.
-Minimize the need for field mapping and transformation logic between modules.
+- Fields with the same meaning across different modules must use consistent naming conventions.
+- Avoid semantic duplication or different variable names for the same concept.
+- Minimize the need for field mapping and transformation logic between modules.
 
 After implementation, you must explicitly specify which fields require frontend transformation.
 
 ---
 
-9. Avoid excessive mock data.
+9. Avoid magic values and hardcoded constants.
+
+Follow these conventions:
+- Exception codes and messages are usually maintained in a centralized module within the project. Reuse existing definitions whenever possible. Only use hardcoded values if the project does not already provide a unified mechanism.
+- Configuration-related values should be centrally managed. Reuse existing configuration modules whenever available. If the project does not have one, create configuration files under: src/config/xxx
+- Projects usually contain modules such as:
+  - constants
+  - const
+  - enums
+  - dictionary
+  or similar naming conventions for shared constants and magic values. If no such module exists, create one under: src/constants/xxx
+
+All reusable constants, status mappings, business limits, cache keys, storage keys, event names, and other shared values must be centrally maintained there.
+Avoid scattering hardcoded values throughout the codebase.
+
+---
+
+10. Avoid excessive mock data.
 
 If external services or third-party integrations are not yet available:
 - Use only minimal necessary mock data
@@ -111,15 +128,17 @@ If external services or third-party integrations are not yet available:
 - Prioritize keeping the main workflow functional
 
 Example:
+
 getOrderList(params) {
   ...(logic code)
+
   // TODO: Replace after order service integration
   return mockOrderData
 }
 
 ---
 
-10. Before making any modifications, you must analyze the full context, including:
+11. Before making any modifications, you must analyze the full context, including:
 - Call chains
 - References and dependencies
 - Impact scope
@@ -129,7 +148,7 @@ Avoid missing related code or introducing inconsistent behavior.
 
 ---
 
-11. After implementation, you must verify:
+12. After implementation, you must verify:
 - Whether the requirements are fully satisfied
 - Whether existing functionality is affected
 - Whether project conventions are followed
@@ -138,7 +157,7 @@ Avoid missing related code or introducing inconsistent behavior.
 - Whether permission risks exist
 - Whether status flow handling is correct
 
-Finally, you must clearly explain(explain with Chinese, format in table or list):
+Finally, you must clearly explain (explain in Chinese, using tables or lists):
 1. What was modified
 2. The impact scope
 3. Whether any TODO items remain
