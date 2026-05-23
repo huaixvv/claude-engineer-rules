@@ -52,6 +52,19 @@ All new database designs must strictly follow existing conventions.
 
 Always follow the principle of minimal changes.
 
+4.1 Extension on excessive fallback handling
+
+All errors caused by external services or other invocations
+(e.g., HTTP calls, RPC, database, message queues, third-party SDKs)
+must be thrown directly. Do NOT:
+- Silently swallow exceptions
+- Return default / empty / mock values as fallback
+- Wrap errors into success responses
+
+Let errors propagate to the unified error handling layer
+(global exception handler, error boundary, middleware).
+Only catch when there is a clear business-level recovery strategy.
+
 ---
 
 5. API design must follow the existing project conventions.
