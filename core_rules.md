@@ -75,6 +75,17 @@ For new projects, default to RESTful API conventions, including:
 - Correct status code usage
 - Semantic endpoint naming
 
+5.1 API Documentation Requirements
+
+For any API exposed to the frontend or external consumers, if the project has integrated an API documentation framework (e.g., Swagger / OpenAPI / Scalar / Redoc / Springdoc, or any equivalent), you MUST:
+
+- Write a clear **request example** for every endpoint
+- Write a clear **success response example** for every endpoint
+- Implement documentation using the project's existing API doc feature (annotations / decorators / schema definitions) — do NOT maintain separate markdown docs in parallel
+- Keep examples in sync with the actual request/response shape; outdated examples are treated as bugs
+
+If the project has NOT integrated any API doc framework, this rule does not apply — but do not introduce a new doc framework without explicit instruction.
+
 ---
 
 6. You must first understand the current permission system, including:
