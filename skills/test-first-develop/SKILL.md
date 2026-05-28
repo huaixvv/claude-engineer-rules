@@ -48,6 +48,11 @@ mid-workflow — see Escape hatch below):
 
 Source: user-provided spec, OR draft a markdown spec yourself.
 
+**Storage location**: save the spec as `docs/specs/{{feature-slug}}.spec.md`
+(use a short, descriptive slug for `{{feature-slug}}`, e.g. `order-refund`,
+`user-signup`). If the project has no `docs/` directory, create it. The
+spec file is a persistent artifact — it stays in the repo alongside the code.
+
 Spec format (BDD-style, mandatory):
 
 ```
@@ -81,7 +86,7 @@ Pick test types per the priority matrix below.
 For each Scenario, write one `test()` / `it()` whose name **matches the
 Scenario title verbatim**.
 
-Test code itself must follow the no-fallback rules (Rule 4.1 / 4.2 / 4.3):
+Test code itself must follow the no-fallback rules (Rule 4.1 / 4.2 / 4.3), core_rules.md:
 
 @/Users/zhixuan/Desktop/PROJECTS/claude-engineer-rules/core_rules.md
 
@@ -90,8 +95,6 @@ Specifically:
 - No `||` / `??` default fallback in test data
 - No silent error swallow in setup / teardown
 - No fake fields added to "make tests easier"
-
-**HANDOFF**: present tests to user, await "OK" before Step 2.5.
 
 ---
 
@@ -110,10 +113,14 @@ $ <test command>
 <paste real output here>
 ```
 
-**HANDOFF**: report "all N tests red as expected" before Step 3.
-
 **If any new test is GREEN at this stage**: the test is broken (testing
 nothing). Fix the test first — do NOT proceed.
+
+**HANDOFF**: present to user the **full file paths** — both the test
+files (e.g. `tests/order/refund.test.ts`) and the spec file
+(e.g. `docs/specs/refund.spec.md`) — together with the red-phase command
+output from this step, so the user can locate and review everything.
+Await "OK" before Step 3.
 
 ---
 
@@ -121,12 +128,8 @@ nothing). Fix the test first — do NOT proceed.
 
 Write the **minimum** code to make tests pass.
 
-Strictly follow project rules (API response envelope spec is pulled in
-transitively via Rule 12):
-
-@/Users/zhixuan/Desktop/PROJECTS/claude-engineer-rules/core_rules.md
-
-Key clauses to obey:
+Strictly follow project rules (already loaded in Step 2 via `core_rules.md`,
+which transitively includes the API response envelope spec via Rule 12):
 
 - Rule 4.1: no swallowing exceptions / no error-as-default
 - Rule 4.2 / 4.3: no default value fallback anywhere
@@ -147,6 +150,30 @@ Verify:
 
 **Forbidden**: claiming "tests should pass" / "this should work" without
 running them. Every green claim **requires actual run output**.
+
+---
+
+## Test Immutability
+
+After tests are written and verified red in Step 2.5, you MUST wait for
+explicit user approval before proceeding to implementation. Once approved,
+tests become the binding contract — implementation conforms to tests,
+never the reverse.
+
+Forbidden:
+
+- Skipping user review and going straight to implementation
+- Changing assertions to match broken code
+- Removing, `.skip`-ing, or commenting out hard-to-pass tests
+- Renaming tests to disguise intent
+- Wrapping test code in `try/catch` or `?.` to hide failures
+
+If a test fails, the IMPLEMENTATION is wrong.
+
+**Exception**: if the spec itself is wrong (business misunderstanding /
+requirement misalignment), STOP, tell the user what's wrong, ask
+permission to revise spec + tests, wait for explicit OK. Never update
+tests on your own judgment.
 
 ---
 
@@ -224,14 +251,13 @@ suite MUST include:
 
 ## Handoff protocol (mandatory pause points)
 
-| After step | Action | Required output to user                                  |
-| ---------- | ------ | -------------------------------------------------------- |
-| Step 1     | Pause  | "Spec ready — confirm before tests?"                    |
-| Step 2     | Pause  | "Tests ready — confirm before red phase?"               |
-| Step 2.5   | Pause  | "All N tests red as expected — proceed to implement?"   |
-| Step 4     | Final  | Actual test output + green/red count + regression status |
+| After step | Action | Required output to user                                                    |
+| ---------- | ------ | -------------------------------------------------------------------------- |
+| Step 1     | Pause  | "Spec ready — confirm before tests?"                                      |
+| Step 2.5   | Pause  | test code + file paths + red-phase output — "All N tests red — proceed?" |
+| Step 4     | Final  | Actual test output + green/red count + regression status                   |
 
-**Never** chain Step 1 → Step 4 without these explicit pauses.
+**Never** chain Step 1 → Step 4 without the two explicit pauses.
 
 ---
 
@@ -247,6 +273,5 @@ If any **Skip condition** above becomes true mid-workflow (e.g. user says
 ## Cross-references
 
 Test code also forbids fallback defaults (Rule 4.1 / 4.2 / 4.3) and follows
-the API response envelope spec (loaded transitively via Rule 12):
-
-@/Users/zhixuan/Desktop/PROJECTS/claude-engineer-rules/core_rules.md
+the API response envelope spec (loaded transitively via Rule 12). All
+project rules are loaded once at Step 2 — no need to re-reference here.
