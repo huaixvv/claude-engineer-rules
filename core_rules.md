@@ -67,6 +67,71 @@ Only catch when there is a clear business-level recovery strategy.
 
 ---
 
+4.2 ⚠️ **CRITICAL** — No Frontend Request Fallback Values
+
+For business write operations (POST / PUT / PATCH), frontend MUST NOT
+silently substitute defaults for user-input fields. FORBIDDEN patterns:
+
+```
+payload.name  = form.name  || ''   // Forbidden
+payload.email = form.email || ''   // Forbidden
+payload.tags  = form.tags  || []   // Forbidden
+```
+
+Reason: backend cannot distinguish "user did not provide" from "user
+provided this zero value". PATCH is especially dangerous — `phone: ''`
+becomes "clear the phone", `tags: []` becomes "wipe all tags".
+
+Required:
+- Validate at the form layer; block submission if required fields are missing.
+- Omit unfilled optional fields entirely — never substitute empty/zero/empty-array.
+- The request layer is for serialization only, never for filling defaults.
+
+Allowed exceptions (closed whitelist):
+- Pagination defaults on GET: `page || 1`, `pageSize || 20`
+- UI state initialization (`useState('')`) — not a request fallback
+
+Pairs with 4.1: backend never fakes data when reading, frontend never
+fakes data when writing.
+
+---
+
+4.3 ⚠️ **CRITICAL** — No Default Value Fallback Anywhere
+
+Unless the user has **explicitly requested** a default value, ALL of the
+following patterns are **FORBIDDEN** — both inline (`||` / `??`) and
+declarative (`= default`, `.default()`, `DEFAULT`):
+
+```
+const status = req.query.status || 'active'      // ❌ receiving params (backend)
+class User { status = 0; role = 'guest' }        // ❌ DTO / Entity field init
+z.string().default('active')                     // ❌ schema validator default
+status INT DEFAULT 1                             // ❌ DB column default (business field)
+const port = opts.port || 5432                   // ❌ config loading
+process.env.NODE_ENV || 'development'            // ❌ env var fallback
+function createUser(name, role = 'guest')        // ❌ business-layer fn default param
+```
+
+Reason: any default injected without authorization replaces the caller's
+real intent. Missing values MUST surface as errors, not be silently
+papered over.
+
+Allowed exceptions (closed whitelist):
+- Pagination / sort defaults (`page`, `pageSize`) — industry consensus
+- Pure utility functions (`debounce(fn, delay = 300)`) — no business semantics
+- UI component prop defaults (`<Button size="md">`) — visual only
+- Test mock factories
+- Pure audit fields in DB (`created_at TIMESTAMP DEFAULT NOW()`)
+
+**Escape hatch**: if the user explicitly requests a default value, follow it.
+This prohibition targets defaults invented by the implementer (including AI)
+without authorization.
+
+Together 4.1 / 4.2 / 4.3 form a complete data-truthfulness chain:
+no fake data on read (4.1), on write (4.2), or anywhere else (4.3).
+
+---
+
 5. API design must follow the existing project conventions.
 
 For new projects, default to RESTful API conventions, including:
