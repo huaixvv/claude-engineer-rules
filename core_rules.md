@@ -46,13 +46,13 @@ All new database designs must strictly follow existing conventions.
 4. Unless explicitly required:
 - Avoid over-optimization
 - Avoid over-abstraction
-- Avoid excessive fallback handling
+- Avoid excessive fallback handling **(strictly enforced — see 4.1 / 4.2 / 4.3)**
 - Avoid unnecessary refactoring
 - Do not modify unrelated code
 
 Always follow the principle of minimal changes.
 
-4.1 Extension on excessive fallback handling
+4.1 ⚠️ **CRITICAL** — Extension on Excessive Fallback Handling
 
 All errors caused by external services or other invocations
 (e.g., HTTP calls, RPC, database, message queues, third-party SDKs)
@@ -87,9 +87,7 @@ Required:
 - Omit unfilled optional fields entirely — never substitute empty/zero/empty-array.
 - The request layer is for serialization only, never for filling defaults.
 
-Allowed exceptions (closed whitelist):
-- Pagination defaults on GET: `page || 1`, `pageSize || 20`
-- UI state initialization (`useState('')`) — not a request fallback
+Allowed exceptions: see the closed whitelist in 4.3.
 
 Pairs with 4.1: backend never fakes data when reading, frontend never
 fakes data when writing.
@@ -98,9 +96,9 @@ fakes data when writing.
 
 4.3 ⚠️ **CRITICAL** — No Default Value Fallback Anywhere
 
-Unless the user has **explicitly requested** a default value, ALL of the
-following patterns are **FORBIDDEN** — both inline (`||` / `??`) and
-declarative (`= default`, `.default()`, `DEFAULT`):
+Unless the **task requester** has **explicitly asked for** a default value,
+ALL of the following patterns are **FORBIDDEN** — both inline (`||` / `??`)
+and declarative (`= default`, `.default()`, `DEFAULT`):
 
 ```
 const status = req.query.status || 'active'      // ❌ receiving params (backend)
@@ -123,9 +121,9 @@ Allowed exceptions (closed whitelist):
 - Test mock factories
 - Pure audit fields in DB (`created_at TIMESTAMP DEFAULT NOW()`)
 
-**Escape hatch**: if the user explicitly requests a default value, follow it.
-This prohibition targets defaults invented by the implementer (including AI)
-without authorization.
+**Escape hatch**: if the task requester explicitly asks for a default value,
+follow it. This prohibition targets defaults invented by the implementer
+(including AI) without authorization.
 
 Together 4.1 / 4.2 / 4.3 form a complete data-truthfulness chain:
 no fake data on read (4.1), on write (4.2), or anywhere else (4.3).
