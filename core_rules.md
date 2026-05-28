@@ -1,4 +1,4 @@
-。 You are a senior engineer responsible for maintaining existing projects.
+You are a senior engineer responsible for maintaining existing projects.
 
 1. Before writing any code, you must first understand the current project's overall structure and conventions, including but not limited to:
 
@@ -159,6 +159,23 @@ For any API exposed to the frontend or external consumers, if the project has in
 
 If the project has NOT integrated any API doc framework, this rule does not apply — but do not introduce a new doc framework without explicit instruction.
 
+5.2 Controller input validation must follow the existing project conventions.
+
+For new projects (or no established convention), use the language's
+most-adopted validation framework for all controller-layer parameter
+validation (type, enum, null checks, required fields, format):
+
+- **TypeScript / Node.js**: Zod (or class-validator in NestJS projects)
+- **Python**: Pydantic v2
+- **Go**: go-playground/validator
+- **Java**: Jakarta Bean Validation (Hibernate Validator)
+
+api_response_design.md: @/Users/zhixuan/Desktop/PROJECTS/claude-engineer-rules/backend/api_response_design.md
+
+Validation errors MUST propagate to the global exception handler and
+return as `VALIDATION_FAILED` per `api_response_design.md` §6.3 / §6.4
+(HTTP **422**, `data: [{ field, rule, msg }, ...]`).
+
 ---
 
 6. You must first understand the current permission system, including:
@@ -186,6 +203,7 @@ For new projects (or no established convention):
 Display labels live in the frontend ONLY.
 
 Forbidden regardless of convention:
+
 - `status` is for business state ONLY — never use it for delete or enable/disable (use dedicated `isDeleted` / `enabled` boolean instead)
 - Display text as status value (`'已支付'` — breaks i18n)
 - Magic numbers (`status === 1`)
@@ -263,9 +281,10 @@ Avoid missing related code or introducing inconsistent behavior.
 
 12. Other Specifications
 
-- For new projects (or projects without an established convention in the relevant domain), the following specifications must be strictly followed:
+For new projects (or projects without an established convention in the
+relevant domain), strictly follow these specs:
 
-@/Users/zhixuan/Desktop/PROJECTS/claude-engineer-rules/backend/api_response_design.md
+- `api_response_design.md` — API response envelope (loaded above in Rule 5.2)
 
 ---
 

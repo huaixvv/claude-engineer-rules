@@ -88,7 +88,7 @@ Scenario title verbatim**.
 
 Test code itself must follow the no-fallback rules (Rule 4.1 / 4.2 / 4.3), core_rules.md:
 
-@/Users/zhixuan/Desktop/PROJECTS/claude-engineer-rules/core_rules.md
+core_rules.md: @/Users/zhixuan/Desktop/PROJECTS/claude-engineer-rules/core_rules.md
 
 Specifically:
 
