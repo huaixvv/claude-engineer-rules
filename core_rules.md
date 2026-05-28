@@ -268,10 +268,10 @@ Finally, you must clearly explain (explain in Chinese, using tables or lists):
    - 4.3 No default value fallback anywhere ❌ (used default for X because Y)
    - 5.1 API doc examples ✅
 3. Whether any TODO items remain
-4. Which fields require frontend transformation
-5. what need frontend or out service to do for this change
-6. Any potential risks
-7. If the change adds a new API endpoint OR modifies the request parameters
+4. Changes frontend / external services need to handle (new endpoints,
+   API parameter changes, field modifications, etc.)
+5. Any potential risks
+6. If the change adds a new API endpoint OR modifies the request parameters
    of an existing endpoint (add / remove / rename / change type / change
    required-ness), output a complete `curl` example with **all** parameters,
    using `{{BASE_URL}}` as the host placeholder. Example:
