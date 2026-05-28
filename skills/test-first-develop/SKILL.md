@@ -1,0 +1,252 @@
+---
+name: test-first-develop
+description: |
+  Drives test-first development for any BACKEND code change — API
+  endpoints, services, business logic, data access, message handlers,
+  background jobs.
+
+  Trigger on any intent to build, extend, or fix backend behavior, in
+  English or Chinese, formal or casual. Examples:
+  - "implement a signup endpoint" / "实现注册接口"
+  - "add order refund feature" / "加一个订单退款功能"
+  - "fix this 500 error" / "修一下这个 bug"
+  - "把订单这块写一下" / "搞一下登录"
+
+  Enforces: TDD (red phase first, must run tests for real), integration
+  tests over mocks, contract snapshots on API boundaries, BDD scenarios
+  for business rules, negative tests for security boundaries.
+
+  Skip for: throwaway scripts, exploratory prototypes, pure UI/frontend,
+  docs/config/rename refactors, or when user explicitly opts out.
+---
+# Test-First Development (Backend)
+
+**Mission**: produce healthy AI-generated backend code by enforcing strict
+test-first discipline.
+
+---
+
+## When to trigger
+
+Match by **intent** (not strict keyword): any backend build / fix /
+extend request triggers this workflow. When in doubt, trigger.
+
+**Skip conditions** (do NOT trigger, or back off cleanly if discovered
+mid-workflow — see Escape hatch below):
+
+- Throwaway / one-off scripts (`scripts/*`, ad-hoc data fixes)
+- Exploratory prototypes
+- Pure UI / frontend-only tasks
+- Documentation / config / pure rename refactor
+- User explicitly says "skip tests" / "no tests" / "quick fix" / "先不写测试"
+
+---
+
+## Mandatory workflow (STRICT order — never skip a step)
+
+### Step 1 — Establish the spec
+
+Source: user-provided spec, OR draft a markdown spec yourself.
+
+Spec format (BDD-style, mandatory):
+
+```
+# Feature: <name>
+
+## Scenario: <happy path>
+Given <preconditions>
+When  <action>
+Then  <expected outcome>
+
+## Scenario: <edge case>
+...
+```
+
+**Edge case discovery — must ask yourself before proceeding:**
+
+- What inputs break it? (null / `''` / negative / huge / unicode / SQL-ish)
+- What states forbid it? (already exists / soft-deleted / expired / locked)
+- Who must NOT be allowed to call it? (unauthenticated / wrong role / wrong owner)
+- What external failures must it survive? (DB timeout / 3rd-party 500 / network split)
+- What concurrent calls cause trouble? (double-submit / race condition / idempotency)
+
+**HANDOFF**: present the spec to user, await "OK" or revision before Step 2.
+
+---
+
+### Step 2 — Translate spec to tests (DO NOT WRITE IMPLEMENTATION)
+
+Pick test types per the priority matrix below.
+
+For each Scenario, write one `test()` / `it()` whose name **matches the
+Scenario title verbatim**.
+
+Test code itself must follow the no-fallback rules (Rule 4.1 / 4.2 / 4.3):
+
+@/Users/zhixuan/Desktop/PROJECTS/claude-engineer-rules/core_rules.md
+
+Specifically:
+
+- No `||` / `??` default fallback in test data
+- No silent error swallow in setup / teardown
+- No fake fields added to "make tests easier"
+
+**HANDOFF**: present tests to user, await "OK" before Step 2.5.
+
+---
+
+### Step 2.5 — Red phase (MANDATORY, never skip)
+
+Run the test suite. Confirm:
+
+- All new tests **fail** (red)
+- Failure reason is "not implemented" / "expected X got undefined" — NOT a
+  syntax error or setup crash
+
+**Attach the actual command output** in this format:
+
+```
+$ <test command>
+<paste real output here>
+```
+
+**HANDOFF**: report "all N tests red as expected" before Step 3.
+
+**If any new test is GREEN at this stage**: the test is broken (testing
+nothing). Fix the test first — do NOT proceed.
+
+---
+
+### Step 3 — Implement
+
+Write the **minimum** code to make tests pass.
+
+Strictly follow project rules (API response envelope spec is pulled in
+transitively via Rule 12):
+
+@/Users/zhixuan/Desktop/PROJECTS/claude-engineer-rules/core_rules.md
+
+Key clauses to obey:
+
+- Rule 4.1: no swallowing exceptions / no error-as-default
+- Rule 4.2 / 4.3: no default value fallback anywhere
+- Rule 12: API response envelope spec for any API endpoint output
+
+---
+
+### Step 4 — Green phase (MANDATORY)
+
+Run the full test suite. **Attach actual output**.
+
+Verify:
+
+- All new tests pass
+- No previously-green tests went red (regression check)
+- Integration tests against real DB ran (if applicable)
+- Linter + type checker clean
+
+**Forbidden**: claiming "tests should pass" / "this should work" without
+running them. Every green claim **requires actual run output**.
+
+---
+
+## Backend test type priority
+
+Apply **per file or feature** (a single PR may mix types):
+
+| Code being tested                          | Required type                                                        | Why                                   |
+| ------------------------------------------ | -------------------------------------------------------------------- | ------------------------------------- |
+| API endpoint                               | **Integration** (real DB + HTTP) + **Contract snapshot** | catch schema / contract drift         |
+| Service layer with DB                      | **Integration** (real DB)                                      | mocked DB lies                        |
+| Pure function / algorithm                  | **Unit** + **Property-based** if non-trivial             | fast feedback, randomized inputs      |
+| Business rule (multi-branch)               | **BDD-style integration** (Given-When-Then)                    | covers branches systematically        |
+| Bug fix                                    | **Reproduction test first** + scan nearby code for siblings    | prevents regression + finds neighbors |
+| Auth / validation / money / external state | **Negative tests mandatory**                                   | AI never thinks of these naturally    |
+
+**Default bias**: prefer **integration over unit-with-mocks**. Only mock
+the truly external (3rd-party APIs, payment gateways, email senders).
+
+---
+
+## Contract test (API boundary)
+
+For every API endpoint touched, snapshot the contract shape. Conceptual
+example (use your project's actual schema extraction tool — `extractApiSchema`
+below is illustrative, not a real API):
+
+```
+// PSEUDO-CODE — illustration only
+expect(extractApiSchema(app, '/users')).toMatchSnapshot()
+```
+
+A passing snapshot on a modified endpoint means **field names, types,
+status codes, and response envelope did NOT change**. If the change was
+intentional, update the snapshot in a **separate commit with explicit
+review**.
+
+Cross-reference: API response envelope spec is loaded via core_rules.md Rule 12.
+
+---
+
+## Negative / security test checklist
+
+For any code touching auth, input, money, or external state, the test
+suite MUST include:
+
+- [ ] Unauthorized caller → 401
+- [ ] Authenticated but wrong role → 403
+- [ ] Invalid input (missing required / wrong type / malicious payload) → 422
+- [ ] Resource not found → 404
+- [ ] Business rule violation (insufficient balance / conflicting state) → 409 / 422
+- [ ] Idempotency / double-submit handled
+- [ ] Boundary numbers (0, negative, INT_MAX, decimal precision)
+
+---
+
+## Forbidden patterns (Hard Stops)
+
+| Pattern                                                     | Why forbidden                            |
+| ----------------------------------------------------------- | ---------------------------------------- |
+| Writing implementation before tests                         | confirmation bias → tests sanctify bugs |
+| Claiming "tests pass" without running                       | #1 AI deception                          |
+| Mocking the database in service / integration tests         | mocked-green ≠ real-green               |
+| Mocking the very thing under test                           | tests verify the mock, not the code      |
+| Happy-path-only tests                                       | misses real-world failures               |
+| Hardcoded conditional to pass tests (`if a===1 return 3`) | AI cheating                              |
+| Empty assertions (`expect(fn()).not.toThrow()`)           | tests nothing                            |
+| Massive auto-generated snapshots no one reviews             | rubber stamp                             |
+| Async without await / race-prone tests                      | flaky → ignored                         |
+| Test data missing edge values (only `"abc"`, `1`)       | misses real bugs                         |
+| Skipping negative tests for security boundaries             | vulnerabilities                          |
+| Test data with hidden default value fallbacks               | violates 4.x in test layer too           |
+
+---
+
+## Handoff protocol (mandatory pause points)
+
+| After step | Action | Required output to user                                  |
+| ---------- | ------ | -------------------------------------------------------- |
+| Step 1     | Pause  | "Spec ready — confirm before tests?"                    |
+| Step 2     | Pause  | "Tests ready — confirm before red phase?"               |
+| Step 2.5   | Pause  | "All N tests red as expected — proceed to implement?"   |
+| Step 4     | Final  | Actual test output + green/red count + regression status |
+
+**Never** chain Step 1 → Step 4 without these explicit pauses.
+
+---
+
+## Escape hatch
+
+If any **Skip condition** above becomes true mid-workflow (e.g. user says
+"just write it, I'll test later"), back off immediately and acknowledge:
+
+> "Test-first workflow skipped per your instruction. Proceeding without tests."
+
+---
+
+## Cross-references
+
+Test code also forbids fallback defaults (Rule 4.1 / 4.2 / 4.3) and follows
+the API response envelope spec (loaded transitively via Rule 12):
+
+@/Users/zhixuan/Desktop/PROJECTS/claude-engineer-rules/core_rules.md

@@ -240,7 +240,7 @@ Avoid missing related code or introducing inconsistent behavior.
 
 - For new projects (or projects without an established convention in the relevant domain), the following specifications must be strictly followed: 
 
-@/Users/zhixuan/Desktop/PROJECTS/claude-engineer-rules/backend/api_response_spec.md
+@/Users/zhixuan/Desktop/PROJECTS/claude-engineer-rules/backend/api_response_design.md
 
 ---
 
@@ -256,8 +256,32 @@ Avoid missing related code or introducing inconsistent behavior.
 ---
 
 Finally, you must clearly explain (explain in Chinese, using tables or lists):
-1. What was modified
-2. The impact scope
+1. What was modified and impact scope
+2. Rule compliance checklist — list every rule above (including sub-rules
+   like 4.1 / 4.2 / 4.3 / 5.1) and mark each with ✅ (satisfied / not applicable
+   in a benign way) or ❌ (violated / skipped — must include a one-line reason).
+   Example:
+   - 1. Project conventions ✅
+   - 2. Reuse existing implementations ✅
+   - 4.1 No silent error swallowing ✅
+   - 4.2 No frontend request fallback ✅ (N/A — backend-only change)
+   - 4.3 No default value fallback anywhere ❌ (used default for X because Y)
+   - 5.1 API doc examples ✅
 3. Whether any TODO items remain
 4. Which fields require frontend transformation
-5. Any potential risks
+5. what need frontend or out service to do for this change
+6. Any potential risks
+7. If the change adds a new API endpoint OR modifies the request parameters
+   of an existing endpoint (add / remove / rename / change type / change
+   required-ness), output a complete `curl` example with **all** parameters,
+   using `{{BASE_URL}}` as the host placeholder. Example:
+
+   ```bash
+   curl -X POST "{{BASE_URL}}/api/orders/refund" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "orderId": "ord_123",
+       "amount": "100.00",
+       "reason": "user_request"
+     }'
+   ```
