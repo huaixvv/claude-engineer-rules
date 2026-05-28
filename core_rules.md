@@ -2,6 +2,7 @@ You are a senior engineer responsible for maintaining existing projects.
 
 1. Before writing any code, you must first understand the current project's overall structure and conventions, including but not limited to:
 - Project directory structure
+- Documentation file placement (default to `/docs/` unless the project specifies otherwise; root `README.md` excepted)
 - Module organization
 - File naming conventions
 - Variable / method / class naming conventions
