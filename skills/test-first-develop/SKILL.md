@@ -86,7 +86,8 @@ Pick test types per the priority matrix below.
 For each Scenario, write one `test()` / `it()` whose name **matches the
 Scenario title verbatim**.
 
-Test code itself must follow the no-fallback rules (Rule 4.1 / 4.2 / 4.3), core_rules.md:
+Test code itself must follow the no-fallback rules from `core_rules.md`
+(Rule 4.1 / 4.2 / 4.3):
 
 core_rules.md: @/Users/zhixuan/Desktop/PROJECTS/claude-engineer-rules/core_rules.md
 
@@ -174,6 +175,47 @@ If a test fails, the IMPLEMENTATION is wrong.
 requirement misalignment), STOP, tell the user what's wrong, ask
 permission to revise spec + tests, wait for explicit OK. Never update
 tests on your own judgment.
+
+---
+
+## Database Strategy (Testcontainers)
+
+New projects: any DB-touching test MUST use Testcontainers per the
+disciplines below. Existing projects with their own established
+DB-testing convention follow that (`core_rules.md` Rule 1), but these
+disciplines still apply regardless of tool. Bypass only when the user
+explicitly says "skip tests" / "先不写测试".
+
+### Mandatory disciplines
+
+1. **Engine + major version match production.** `postgres:15` prod →
+   `postgres:15-alpine` tests. No sqlite / cross-engine substitute.
+
+2. **Use the Testcontainers SDK.** Never manual `docker run` or
+   standalone Docker Compose.
+
+3. **Local: `.withReuse()` enabled. CI: no reuse** (automatic).
+
+4. **DB connection ONLY via env var** (e.g. `process.env.DATABASE_URL`).
+   No `||` / `??` / `DEFAULT` fallback (`core_rules.md` Rule 4.3).
+
+5. **Auto-run migrations on test startup**, migration files committed.
+
+6. **Test isolation = transaction rollback** (`beforeEach: BEGIN` /
+   `afterEach: ROLLBACK`).
+
+7. **Image tag: pin major version + prefer alpine.**
+   ✅ `postgres:15-alpine`. ❌ `:latest`, ❌ no tag.
+
+8. **`src/` is production-only.** Never imports from `tests/`, never
+   references the testcontainers SDK — keeps prod artifact
+   Docker-independent.
+
+### No Docker on the machine
+
+STOP and ask the user (install Docker / OrbStack / Colima, or skip
+integration tests for this task). Silent fallback (sqlite, shared dev DB,
+skipping) is forbidden.
 
 ---
 
@@ -267,11 +309,3 @@ If any **Skip condition** above becomes true mid-workflow (e.g. user says
 "just write it, I'll test later"), back off immediately and acknowledge:
 
 > "Test-first workflow skipped per your instruction. Proceeding without tests."
-
----
-
-## Cross-references
-
-Test code also forbids fallback defaults (Rule 4.1 / 4.2 / 4.3) and follows
-the API response envelope spec (loaded transitively via Rule 12). All
-project rules are loaded once at Step 2 — no need to re-reference here.
