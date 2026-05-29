@@ -191,8 +191,14 @@ explicitly says "skip tests" / "先不写测试".
 1. **Engine + major version match production.** `postgres:15` prod →
    `postgres:15-alpine` tests. No sqlite / cross-engine substitute.
 
-2. **Use the Testcontainers SDK.** Never manual `docker run` or
-   standalone Docker Compose.
+2. **Use the Testcontainers SDK** — never manual `docker run` or
+   standalone Docker Compose. Docker prerequisite & cleanup:
+   - Before tests: `command -v docker` missing → STOP, ask user to install
+     (Docker Desktop / OrbStack / Colima). `docker info` fails → auto-start
+     (`open -a Docker` macOS / `systemctl --user start docker-desktop` Linux),
+     poll until ready.
+   - After feature done: destroy this feature's containers, keep engine running.
+     `docker rm -f $(docker ps -aq --filter "label=org.testcontainers=true")`
 
 3. **Local: `.withReuse()` enabled. CI: no reuse** (automatic).
 
@@ -210,12 +216,6 @@ explicitly says "skip tests" / "先不写测试".
 8. **`src/` is production-only.** Never imports from `tests/`, never
    references the testcontainers SDK — keeps prod artifact
    Docker-independent.
-
-### No Docker on the machine
-
-STOP and ask the user (install Docker / OrbStack / Colima, or skip
-integration tests for this task). Silent fallback (sqlite, shared dev DB,
-skipping) is forbidden.
 
 ---
 
@@ -252,8 +252,6 @@ A passing snapshot on a modified endpoint means **field names, types,
 status codes, and response envelope did NOT change**. If the change was
 intentional, update the snapshot in a **separate commit with explicit
 review**.
-
-Cross-reference: API response envelope spec is loaded via core_rules.md Rule 12.
 
 ---
 
