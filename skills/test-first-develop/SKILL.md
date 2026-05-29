@@ -117,10 +117,22 @@ $ <test command>
 **If any new test is GREEN at this stage**: the test is broken (testing
 nothing). Fix the test first — do NOT proceed.
 
-**HANDOFF**: present to user the **full file paths** — both the test
-files (e.g. `tests/order/refund.test.ts`) and the spec file
-(e.g. `docs/specs/refund.spec.md`) — together with the red-phase command
-output from this step, so the user can locate and review everything.
+**HANDOFF** — present to user in this order:
+
+1. Spec file path
+2. Test file paths
+3. **Scenario → Test mapping table** (one row per BDD scenario):
+
+   | Scenario | Test location | Status |
+   | --- | --- | --- |
+   | <scenario title> | `tests/foo.test.ts: <test name verbatim>` | 🔴 |
+   | <scenario title> | `tests/foo.test.ts: <test name>` | 🟢 reuses existing auth() |
+
+   Status: 🔴 red (expected) / 🟢 green (MUST annotate the reason inline)
+   / ⚠️ false-green (fix test first).
+
+4. Red-phase command output (`$ <cmd>` + actual output)
+
 Await "OK" before Step 3.
 
 ---
@@ -148,6 +160,17 @@ Verify:
 - No previously-green tests went red (regression check)
 - Integration tests against real DB ran (if applicable)
 - Linter + type checker clean
+
+**Final summary** — output the same Scenario → Test mapping table as
+Step 2.5, but with real post-implementation status:
+
+| Scenario | Test location | Status |
+| --- | --- | --- |
+| <scenario title> | `tests/foo.test.ts: <test name>` | 🟢 |
+| <scenario title> | `tests/foo.test.ts: <test name>` | 🔴 reason: <inline explanation> |
+
+Status: 🟢 passing / 🔴 still failing (MUST explain reason inline) /
+⚠️ regression (was passing, now broken).
 
 **Forbidden**: claiming "tests should pass" / "this should work" without
 running them. Every green claim **requires actual run output**.
@@ -294,8 +317,8 @@ suite MUST include:
 | After step | Action | Required output to user                                                    |
 | ---------- | ------ | -------------------------------------------------------------------------- |
 | Step 1     | Pause  | "Spec ready — confirm before tests?"                                      |
-| Step 2.5   | Pause  | test code + file paths + red-phase output — "All N tests red — proceed?" |
-| Step 4     | Final  | Actual test output + green/red count + regression status                   |
+| Step 2.5   | Pause  | spec path + test paths + scenario→test mapping table + red-phase output |
+| Step 4     | Final  | Test output + scenario→test mapping table (real status) + regression status |
 
 **Never** chain Step 1 → Step 4 without the two explicit pauses.
 
